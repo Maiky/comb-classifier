@@ -1,0 +1,6 @@
+.idea
+combdetection/__pycache__
+combdetection/utils/__pycache__
+data/datasets
+data/images
+data/saved_networks
