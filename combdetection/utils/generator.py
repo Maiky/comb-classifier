@@ -9,7 +9,6 @@ import matplotlib.path as mplPath
 #import matplotlib.transforms as trans
 from numpy import random
 import sys
-import cv2
 import os, glob
 from distutils.util import strtobool
 from sklearn.cross_validation import train_test_split
@@ -183,6 +182,7 @@ class Generator(object):
 
 
     def _generate_samples_for_mask(self,grp, file, mask_type, accept_outside=False, compression=None):
+        import cv2
         """
         Return the x intercept of the line M{y=m*x+b}.  The X{x intercept}
         of a line is the point at which it crosses the x axis (M{y=0}).
