@@ -4,3 +4,5 @@ combdetection/utils/__pycache__
 data/datasets
 data/images
 data/saved_networks
+data/320x240
+datasets
