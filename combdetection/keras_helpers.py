@@ -10,7 +10,9 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 from keras.layers.core import Flatten
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score
 import theano
-
+import combdetection.config as conf
+import os.path
+import h5py
 
 from combdetection import visualization
 
@@ -32,6 +34,9 @@ def get_datagen(X):
     return datagen
 
 class HistoryCallback(Callback):
+    def __init__(self,network_name):
+        self.network_name = network_name
+
     def on_train_begin(self, logs={}):
         self.batch_hist = []
         self.epoch_hist = []
@@ -39,60 +44,77 @@ class HistoryCallback(Callback):
     def on_batch_end(self, batch, logs={}):
         self.batch_hist.append((logs.get('loss'), logs.get('acc')))
 
+    def on_train_end(self,logs={}):
+        if(conf.TRAINING_LOG_SAVE):
+            fp = conf.TRAINING_LOG_PATH+self.network_name+".hd5f"
+            if (os.path.exists(fp)):
+                os.remove(fp)
+            f = h5py.File(fp, "w")
+            dset = f.create_dataset("batch_hist", data=self.batch_hist)
+            dset = f.create_dataset("batch_hist", data=self.batch_hist)
+
     def on_epoch_end(self, batch, logs={}):
         self.epoch_hist.append((logs.get('val_loss'), logs.get('val_acc')))
 
-def fit_model(model, datagen, X_train, y_train, X_test, y_test, weight_path, class_weight,
-              nb_epoch=100, batchsize=4096, categorial=True):
-    checkpointer = ModelCheckpoint(filepath=weight_path, verbose=0, save_best_only=True)
+def fit_model(model,dataset_path, network_filename, class_weight,
+              nb_epoch=100, batch_size=128):
+
+    #callback to save weights after each epoch
+    checkpointer = ModelCheckpoint(filepath=conf.TRAINING_WEIGHTS_PATH+network_filename+".hdf5", verbose=0, save_best_only=True)
+
+    #callback to stop training if monitor-param stays the same for patinence-count epochs
     stopper = EarlyStopping(monitor='val_loss', patience=3, verbose=1)
+
+    #custom callback to store accuracy
     history = HistoryCallback()
 
     callbacks = [checkpointer, stopper, history]
 
-    for callback in callbacks:
-        callback._set_model(model)
-        callback.on_train_begin()
+    #or callback in callbacks:
+        #callback._set_model(model)
+        #callback.on_train_begin()
 
-    model.stop_training = False
+    model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+              show_accuracy=True, verbose=1, validation_data=(X_test, Y_test))
+    #model.stop_training = False
 
-    for e in range(nb_epoch):
-        print('Epoch', e)
-
-        progbar = generic_utils.Progbar(X_train.shape[0])
-        for X_batch, Y_batch in datagen.flow(X_train, y_train, batch_size=batchsize):
-            loss, acc = model.train_on_batch(X_batch, Y_batch, accuracy=True, class_weight=class_weight)
-
-            logs = {'loss': loss, 'acc': acc}
-            for callback in callbacks:
-                 callback.on_batch_end(None, logs)
-
-            progbar.add(X_batch.shape[0], values=[("train loss", loss), ("train acc", acc)])
-
-        num_test  = 0
-        mean_loss = 0.
-        mean_acc  = 0.
-        progbar = generic_utils.Progbar(X_test.shape[0])
-        for X_batch, Y_batch in datagen.flow(X_test, y_test, batch_size=batchsize):
-            loss, acc = model.test_on_batch(X_batch, Y_batch, accuracy=True)
-
-            num_test += 1
-            mean_loss += loss
-            mean_acc += acc
-
-            progbar.add(X_batch.shape[0], values=[("test loss", loss), ("test acc", acc)])
-
-        mean_loss /= num_test
-        mean_acc /= num_test
-
-        logs = {'val_loss': mean_loss, 'val_acc': mean_acc}
-        for callback in callbacks:
-            callback.on_epoch_end(e, logs)
-
-        if model.stop_training:
-            break
-
-        print()
+    # for e in range(nb_epoch):
+    #     print('Epoch', e)
+    #
+    #     progbar = generic_utils.Progbar(X_train.shape[0])
+    #     for X_batch, Y_batch in datagen.flow(X_train, y_train, batch_size=batchsize):
+    #         loss, acc = model.train_on_batch(X_batch, Y_batch, accuracy=True, class_weight=class_weight)
+    #
+    #         logs = {'loss': loss, 'acc': acc}
+    #         for callback in callbacks:
+    #              callback.on_batch_end(None, logs)
+    #
+    #         progbar.add(X_batch.shape[0], values=[("train loss", loss), ("train acc", acc)])
+    #
+    #     num_test  = 0
+    #     mean_loss = 0.
+    #     mean_acc  = 0.
+    #     progbar = generic_utils.Progbar(X_test.shape[0])
+    #     for X_batch, Y_batch in datagen.flow(X_test, y_test, batch_size=batchsize):
+    #         loss, acc = model.test_on_batch(X_batch, Y_batch, accuracy=True)
+    #
+    #         num_test += 1
+    #         mean_loss += loss
+    #         mean_acc += acc
+    #
+    #         progbar.add(X_batch.shape[0], values=[("test loss", loss), ("test acc", acc)])
+    #
+    #     mean_loss /= num_test
+    #     mean_acc /= num_test
+    #
+    #     logs = {'val_loss': mean_loss, 'val_acc': mean_acc}
+    #     for callback in callbacks:
+    #         callback.on_epoch_end(e, logs)
+    #
+    #     if model.stop_training:
+    #         break
+    #
+    #     print()
 
     model.load_weights(weight_path)
 

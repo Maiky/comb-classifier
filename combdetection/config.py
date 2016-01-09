@@ -16,17 +16,25 @@ GENERATOR_MIN_OVERLAPPING_BIG= 0.8
 # defines the shift-offset of the sliding window of the generator-image
 GENERATOR_SHIFT = 5
 
-
 # if set to true, plots for sample-generation will be shown
 GENERATOR_OUTPUT= False
 
 #
 #   TRAINING PARAMETER
 #
+TRAINING_LOG_SAVE = True
+TRAINING_DATASET_PATH = './datasets/'
+TRAINING_LOG_PATH = './logs/'
+TRAINING_WEIGHTS_PATH = './saved_networks/'
+
+ANALYSE_PLOTS_PATH= './plots/'
+ANALYSE_PLOTS_SAVE= True
+ANALYSE_PLOTS_SHOW = False
+
 
 NETWORK_SAMPLE_SIZE= (22,22)
 
-NETWORK_TRAIN_MAX_SAMPLES = None
+NETWORK_TRAIN_MAX_SAMPLES = 10
 #CLASS_COLOR_MAPPING = { 2: [255, 255, 0]}
 #CLASS_LABEL_MAPPING = {2: "bee_head"}
 CLASS_COLOR_MAPPING = {0: [0, 255, 0], 1: [0, 0, 255], 2: [255, 255, 0], 3: [240, 157, 157], 4: [255, 0, 0], 5: [255, 100, 0],

@@ -12,6 +12,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.objectives import mse
+import keras.callbacks
 
 
 if __name__ == '__main__':
@@ -94,9 +95,9 @@ if __name__ == '__main__':
 
     model = combdetection.models.get_saliency_network(train=True)
 
-    hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+
+    model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               show_accuracy=True, verbose=1, validation_data=(X_test, Y_test))
-    print(hist.shape)
 
     model.save_weights(config_file, overwrite=True)
     score = model.evaluate(X_test, Y_test, show_accuracy=True, verbose=0)

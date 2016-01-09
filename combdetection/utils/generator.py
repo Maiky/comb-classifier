@@ -15,10 +15,29 @@ from distutils.util import strtobool
 from sklearn.cross_validation import train_test_split
 from scipy.misc import imread, imresize
 
+"""
+class to organize training-data
+examples:
+    generate training-data from mask-images
+
+        >>> generator.Generator(datasetname, openForWriting=True)
+        >>> gen.generate_dataset(path_to_images, full_labeled=True)
+
+    show information about a dataset:
+
+        >>> gen = generator.Generator(datasetname).show_details()
+
+    load training-data, already splitted in training/testdata
+    (ATTENTION: to train the current used CNN, you need to reformat data, see in trainerclass.preprocess_data)
+
+        >>> gen = generator.Generator(datasetname)
+        >>> X_train, X_test, y_train, y_test= gen.load_traindata()
+
+"""
 
 class Generator(object):
-    def __init__(self, dataset_path, append=False, openForWriting = False):
-        self.dataset_path = dataset_path
+    def __init__(self, dataset_name, append=False, openForWriting = False):
+        self.dataset_path = conf.TRAINING_DATASET_PATH+dataset_name+".hdf5"
         if (os.path.exists(self.dataset_path)):
             if(openForWriting):
                 if (append):
@@ -94,7 +113,7 @@ class Generator(object):
                 values = ds[()]
                 if (equal_class_sizes):
                     if (min_sample_count > 0):
-                        values = values[0:(min_sample_count)]
+                        values = values[np.random.choice(values.shape[0], min_sample_count), :]
                     else:
                         values = []
                     sample_count = min_sample_count
@@ -128,11 +147,14 @@ class Generator(object):
             datasets = []
             for name in self.f:
                 datasets.append(name)
-        print(datasets)
         for set in datasets:
             self._print_details_for_dataset(set)
 
     def _print_details_for_dataset(self, dataset):
+        print("meta-informations for " + dataset + ":")
+        ds = self.f.get(dataset)
+        for k in ds.attrs.keys():
+            print("     "+str(k)+":"+str(ds.attrs[k]))
         print("sample-count details for " + dataset + ":")
         for name in self.f.get(dataset):
             dset = self.f.get(dataset).get(name)
@@ -219,9 +241,13 @@ class Generator(object):
                     continue
 
             grp = self.f.require_group(dataset_group)
+            grp.attrs['included_classes']= str(conf.CLASS_LABEL_MAPPING)
+            grp.attrs['shift']= str(conf.GENERATOR_SHIFT)
+            grp.attrs['min_overlapping']= str(conf.GENERATOR_MIN_OVERLAPPING)
+            grp.attrs['min_overlapping_big']= str(conf.GENERATOR_MIN_OVERLAPPING_BIG)
             #  if the image is full labeled, generate masks out of labeled-image
             if (full_labeled):
-
+                grp.attrs['full_labeled'] = "YES"
                 image_base, extention = os.path.splitext(os.path.basename(file))
                 image_path, img = os.path.split(os.path.abspath(file))
                 fn = image_path + "/" + image_base + '_' + 'full_labeled' + '.jpg'
@@ -231,6 +257,7 @@ class Generator(object):
                     self._generate_samples_for_mask(grp, os.path.realpath(file), mask_type[1], accept_outside=False,
                                                     compression=compression, im_mask=im)
             else:
+                grp.attrs['full_labeled'] = "NO"
                 for mask_type in mask_types:
                     self._generate_samples_for_mask(grp, os.path.realpath(file), mask_type[1], accept_outside=False,
                                                     compression=compression)
@@ -275,6 +302,11 @@ class Generator(object):
         print("generate samples for mask-type:" + mask_type + " with orig-smaple-size:" + str(
             orig_size) + " max-shift:" + str(max_shift) + "and compression:" + str(compression) + ".")
         print("new size of samples:" + str(sample_size) + " and as vector:" + str(vector_size))
+        grp.attrs['compression_factor'] = compression
+        grp.attrs['orig_sample_size'] = orig_size
+        grp.attrs['compr_sample_size'] = sample_size
+
+
 
         # if mask is not given as parameter, try to find it in file-system
         if im_mask is None:
@@ -291,6 +323,8 @@ class Generator(object):
 
         orig = imread(file, flatten=True)
 
+        grp.attrs['orig_image_size'] = str(orig.shape)
+
         if (compression is not None):
             orig_compressed_size = (
             int(np.round(orig.shape[0] / compression)), int(np.round(orig.shape[1] / compression)))
@@ -300,6 +334,8 @@ class Generator(object):
             print("ERROR: mask(" + str(im_mask.shape) + ") and original-image(" + str(
                 orig.shape) + ") has different sizes, shutdown")
             exit()
+
+        grp.attrs['compressed_image_size'] = orig.shape
 
             # if not target == False:
             # target_directory = target_directory+"/"+mask_type
