@@ -75,17 +75,19 @@ class Generator(object):
         if (equal_class_sizes):
             for name in dset:
                 ds = dset.get(name)
-                if name in conf.CLASS_LABEL_MAPPING:
+                if name in conf.CLASS_LABEL_MAPPING.values():
                     if (min_sample_count == -1) | (ds.len() < min_sample_count):
                         min_sample_count = ds.len()
         if (max_sample_size is not None):
             if (max_sample_size < min_sample_count):
                 min_sample_count = max_sample_size
+
         X = []
         y = []
+        inv_class_labeling =  {v: k for k, v in conf.CLASS_LABEL_MAPPING.items()}
         # iterate over classes
         for name in dset:
-            if name in conf.CLASS_LABEL_MAPPING:
+            if name in conf.CLASS_LABEL_MAPPING.values():
                 ds = dset.get(name)
                 print('     add training-data for label: ' + name)
 
@@ -100,7 +102,8 @@ class Generator(object):
                     sample_count = ds.len()
                 X.extend(values)
                 print(str(np.shape(X)))
-                encoded_class = conf.CLASS_LABEL_MAPPING.get(name)
+
+                encoded_class = inv_class_labeling.get(name)
                 y.extend([encoded_class] * sample_count)
                 print('     added ' + str(sample_count) + " samples")
 

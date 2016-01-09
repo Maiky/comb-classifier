@@ -28,7 +28,7 @@ if __name__ == '__main__':
     nb_epoch = 15
 
     # input image dimensions
-    img_rows, img_cols = 28, 28
+    #img_rows, img_cols = 28, 28
     # number of convolutional filters to use
     nb_filters = 32
     # size of pooling area for max pooling
@@ -69,15 +69,16 @@ if __name__ == '__main__':
     X_train /= 255
     X_test /= 255
     print('X_train shape:', X_train.shape)
-    print(X_train.shape[0], 'train samples')
+    print(X_train.shape[0
+          ], 'train samples')
     print(X_test.shape[0], 'test samples')
 
     # convert class vectors to binary class matrices
     Y_train = np_utils.to_categorical(y_train, nb_classes)
     Y_test = np_utils.to_categorical(y_test, nb_classes)
 
-    print('Rows: %d, columns: %d' % (X_train.shape[0], X_train.shape[1]))
-    print('Rows: %d, columns: %d' % (X_test.shape[0], X_test.shape[1]))
+    print('Training-Rows: %d, columns: %d' % (X_train.shape[0], X_train.shape[1]))
+    print('Test-Rows: %d, columns: %d' % (X_test.shape[0], X_test.shape[1]))
     # nn = combdetection.small_conv.get_filter_network()
     # if (len(config_file) == 0) | (not os.path.exists(config_file)):
     #     history = nn.fit(X_train, y_train,nb_epoch=nb_epoch,batch_size=batch_size, verbose=1, show_accuracy=True)
