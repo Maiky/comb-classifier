@@ -67,15 +67,15 @@ class Generator(object):
         """
         max_sample_size = None
         if (max_size_per_set is not None):
-            max_sample_size = int(np.round(max_size_per_set / len(conf.NETWORK_CLASS_LABELS)))
+            max_sample_size = int(np.round(max_size_per_set / len(conf.CLASS_LABEL_MAPPING)))
         elif (conf.NETWORK_TRAIN_MAX_SAMPLES is not None):
-            max_sample_size = int(np.round(conf.NETWORK_TRAIN_MAX_SAMPLES / len(conf.NETWORK_CLASS_LABELS)))
+            max_sample_size = int(np.round(conf.NETWORK_TRAIN_MAX_SAMPLES / len(conf.CLASS_LABEL_MAPPING)))
 
         min_sample_count = -1
         if (equal_class_sizes):
             for name in dset:
                 ds = dset.get(name)
-                if name in conf.NETWORK_CLASS_LABELS:
+                if name in conf.CLASS_LABEL_MAPPING:
                     if (min_sample_count == -1) | (ds.len() < min_sample_count):
                         min_sample_count = ds.len()
         if (max_sample_size is not None):
@@ -85,7 +85,7 @@ class Generator(object):
         y = []
         # iterate over classes
         for name in dset:
-            if name in conf.NETWORK_CLASS_LABELS:
+            if name in conf.CLASS_LABEL_MAPPING:
                 ds = dset.get(name)
                 print('     add training-data for label: ' + name)
 
@@ -100,7 +100,7 @@ class Generator(object):
                     sample_count = ds.len()
                 X.extend(values)
                 print(str(np.shape(X)))
-                encoded_class = conf.NETWORK_CLASS_LABELS.get(name)
+                encoded_class = conf.CLASS_LABEL_MAPPING.get(name)
                 y.extend([encoded_class] * sample_count)
                 print('     added ' + str(sample_count) + " samples")
 
