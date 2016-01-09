@@ -12,9 +12,9 @@ GENERATOR_COMPRESSION_FAKTOR = 4
 
 # mininum percentage, for that a generated sample must be overlapped to the original contour
 GENERATOR_MIN_OVERLAPPING= 0.7
-GENERATOR_MIN_OVERLAPPING_BIG= 0.9
+GENERATOR_MIN_OVERLAPPING_BIG= 0.8
 # defines the shift-offset of the sliding window of the generator-image
-GENERATOR_SHIFT = 15
+GENERATOR_SHIFT = 5
 
 
 # if set to true, plots for sample-generation will be shown
