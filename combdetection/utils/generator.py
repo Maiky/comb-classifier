@@ -17,14 +17,17 @@ from scipy.misc import imread, imresize
 
 
 class Generator(object):
-    def __init__(self, dataset_path, append=False):
+    def __init__(self, dataset_path, append=False, openForWriting = False):
         self.dataset_path = dataset_path
         if (os.path.exists(self.dataset_path)):
-            if (append):
-                self.f = h5py.File(self.dataset_path, 'r+')
+            if(openForWriting):
+                if (append):
+                    self.f = h5py.File(self.dataset_path, 'r+')
+                else:
+                    os.remove(self.dataset_path)
+                    self.f = h5py.File(self.dataset_path, "w")
             else:
-                os.remove(self.dataset_path)
-                self.f = h5py.File(self.dataset_path, "w")
+                self.f = h5py.File(self.dataset_path, 'r')
         else:
             self.f = h5py.File(self.dataset_path, "w")
 
@@ -112,6 +115,7 @@ class Generator(object):
         @rtype:   bool
         @return: true, if generation successful, false otherwise
         """
+
         if len(dataset) > 0:
             if (not dataset in self.f):
                 raise Exception("data-set not found in file")
@@ -121,7 +125,7 @@ class Generator(object):
             datasets = []
             for name in self.f:
                 datasets.append(name)
-
+        print(datasets)
         for set in datasets:
             self._print_details_for_dataset(set)
 
@@ -322,7 +326,7 @@ class Generator(object):
         max_machting = (sample_size[0] * sample_size[1])
         big_mask = False
         thres = conf.GENERATOR_MIN_OVERLAPPING
-        if max_sample_count/(orig.shape[0]*orig.shape[1]) > 0.4:
+        if not "bee" in mask_type:
             big_mask = True
             thres = conf.GENERATOR_MIN_OVERLAPPING_BIG
             print("big mask dected, start shifting..")
