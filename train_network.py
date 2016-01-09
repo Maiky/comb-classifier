@@ -8,5 +8,5 @@ if __name__ == '__main__':
 
     model = md.get_saliency_network(train=True)
     trainer = tr.Trainer()
-    hist = trainer.fit(model, dataset_name,nn_name,nb_epoch=10)
+    hist = trainer.fit(model, dataset_name,nn_name,nb_epoch=100)
     trainer.show_training_performance(hist)
