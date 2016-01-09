@@ -18,7 +18,7 @@ GENERATOR_SHIFT = 15
 
 
 # if set to true, plots for sample-generation will be shown
-GENERATOR_OUTPUT= True
+GENERATOR_OUTPUT= False
 
 #
 #   TRAINING PARAMETER
