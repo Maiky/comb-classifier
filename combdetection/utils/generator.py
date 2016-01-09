@@ -322,7 +322,7 @@ class Generator(object):
         max_machting = (sample_size[0] * sample_size[1])
         big_mask = False
         thres = conf.GENERATOR_MIN_OVERLAPPING
-        if max_sample_count/(orig.shape[0]*orig.shape[1]) > 0.4:
+        if not "bee" in mask_type:
             big_mask = True
             thres = conf.GENERATOR_MIN_OVERLAPPING_BIG
             print("big mask dected, start shifting..")
