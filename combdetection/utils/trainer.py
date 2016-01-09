@@ -31,8 +31,10 @@ class LoggingCallback(Callback):
         fp = conf.TRAINING_LOG_PATH+self.network_name+".hd5f"
         if (os.path.exists(fp)):
             f = h5py.File(fp, "r")
-            self.batch_hist =  f.get("batch_hist").values()
-            self.epoch_hist =  f.get("epoch_hist").values()
+            bds = f.get("batch_hist")
+            eds = f.get("epoch_hist")
+            self.batch_hist = bds[()]
+            self.epoch_hist = eds[()]
             return True
         return False
 
@@ -53,7 +55,7 @@ class LoggingCallback(Callback):
                 os.remove(fp)
             f = h5py.File(fp, "w")
             f.create_dataset("batch_hist", data=self.batch_hist)
-            f.create_dataset("echo_hist", data=self.batch_hist)
+            f.create_dataset("epoch_hist", data=self.epoch_hist)
 
 """
  helper-class to train the network
