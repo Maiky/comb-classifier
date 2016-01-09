@@ -8,7 +8,7 @@ from combdetection import config
 
 def plot_sample_images(X, y, y_true = None, num = 24, rowsize = 6, y_bool=False, fig=None, random=False):
     if fig is None:
-        fig = plt.figure(figsize=config.GENERATOR_SAMPLE_SIZE)
+        fig = plt.figure(figsize=config.GENERATOR_ORIG_SAMPLE_SIZE)
 
     assert(num % rowsize == 0)
 
@@ -33,7 +33,7 @@ def plot_sample_images(X, y, y_true = None, num = 24, rowsize = 6, y_bool=False,
 
 def plot_roc(fpr, tpr, roc_auc, ax=None):
     if ax is None:
-        fig, ax = plt.subplots(figsize=config.GENERATOR_SAMPLE_SIZE)
+        fig, ax = plt.subplots(figsize=config.GENERATOR_ORIG_SAMPLE_SIZE)
 
     ax.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
     ax.plot([0, 1], [0, 1], 'k--')

@@ -79,7 +79,7 @@ if __name__ == '__main__':
     fig, ax = plt.subplots(nrows=5, ncols=5, sharex=True, sharey=True,)
     ax = ax.flatten()
     for i in range(25):
-        img = miscl_img[i].reshape(combdetection.config.GENERATOR_SAMPLE_SIZE[0], combdetection.config.GENERATOR_SAMPLE_SIZE[1])
+        img = miscl_img[i].reshape(combdetection.config.GENERATOR_ORIG_SAMPLE_SIZE[0], combdetection.config.GENERATOR_ORIG_SAMPLE_SIZE[1])
         ax[i].imshow(img, cmap='Greys', interpolation='nearest')
         right_l =[label for label, enc in labels.items() if enc == correct_lab[i]]
         pre_l = [label for label, enc in labels.items() if enc == miscl_lab[i]]

@@ -93,8 +93,10 @@ if __name__ == '__main__':
 
     model = combdetection.models.get_saliency_network(train=True)
 
-    model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
+    hist = model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
               show_accuracy=True, verbose=1, validation_data=(X_test, Y_test))
+    print(hist.shape)
+
     model.save_weights(config_file, overwrite=True)
     score = model.evaluate(X_test, Y_test, show_accuracy=True, verbose=0)
     print('Test score:', score[0])

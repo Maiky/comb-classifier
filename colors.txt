@@ -1,0 +1,15 @@
+Class-Colors:
+
+
+
+0 filled_comb: (0, 255,0)
+1 empty_comb: (0,255, 0)
+
+2 bee_head: (255,255,0)
+3 bee_middle: (240,157,157)
+4 bee_tag: (255,0,0)
+5 bee_back: (255, 100,0)
+6 bee_in_comb:(92, 208, 205)
+
+
+7 undef: (100,100,100)

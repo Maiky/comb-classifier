@@ -11,4 +11,4 @@ if __name__ == '__main__':
     target = sys.argv[1]
 
     gen = generator.Generator(target)
-    gen.generate_dataset(directory)
+    gen.generate_dataset(directory, full_labeled=True)

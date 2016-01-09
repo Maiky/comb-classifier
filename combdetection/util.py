@@ -213,10 +213,12 @@ def compress_image_for_network_old(image_path, filter_imsize):
 
     return image, image_filtersize, targetsize
 
-def compress_image_for_network(image_path):
+def compress_image_for_network(image_path, grey=True):
+    if grey:
+        image = cv2.imread(image_path, cv2.CV_8UC1)
+    else:
+        image = cv2.imread(image_path)
 
-    image = cv2.imread(image_path, cv2.CV_8UC1)
-    print(image.shape)
     if(combdetection.config.GENERATOR_COMPRESSION_FAKTOR is not None):
         targetsize = np.round(np.array(image.shape)/combdetection.config.GENERATOR_COMPRESSION_FAKTOR).astype(int)
         print("new size" + str(targetsize))
@@ -268,7 +270,7 @@ def get_default_logger():
 
 
 def get_sliding_window_samples(image, targetsize):
-    stride = 5
+    stride = 1
     nsamples = int(((targetsize[0] - combdetection.config.NETWORK_SAMPLE_SIZE[0]) * (targetsize[1] - combdetection.config.NETWORK_SAMPLE_SIZE[1]))/stride)
 
     Xsamples = np.zeros((nsamples, 1, combdetection.config.NETWORK_SAMPLE_SIZE[0], combdetection.config.NETWORK_SAMPLE_SIZE[1]), dtype=np.float)
