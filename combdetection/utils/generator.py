@@ -348,8 +348,6 @@ class Generator(object):
                     # exit()
                     # print(np.sum(sliding_window)/max_machting)
                     # check if windows is overlapping enough
-
-                    print(np.sum(sliding_window) / max_machting)
                     if (np.sum(sliding_window) / max_machting) >= thres:
                         sample = orig[start_x:(start_x + sample_size[0]), start_y:(start_y + sample_size[1])]
 
