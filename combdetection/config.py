@@ -28,10 +28,10 @@ NETWORK_SAMPLE_SIZE= (28,28)
 
 NETWORK_TRAIN_MAX_SAMPLES = None
 #CLASS_COLOR_MAPPING = { 2: [255, 255, 0]}
-CLASS_LABEL_MAPPING = {2: "bee_head"}
+#CLASS_LABEL_MAPPING = {2: "bee_head"}
 CLASS_COLOR_MAPPING = {0: [0, 255, 0], 1: [0, 0, 255], 2: [255, 255, 0], 3: [240, 157, 157], 4: [255, 0, 0], 5: [255, 100, 0],
                  6: [92, 208, 205], 7: [100, 100, 100]}
 CLASS_MERGES = {3:2,5:2,4:2}
-#CLASS_LABEL_MAPPING = {0: "filled_comb", 1: "empty_comb", 2: "bee_head"}#, 3: "bee_middle", 4: "bee_tag", 5: "bee_back",
+CLASS_LABEL_MAPPING = {0: "filled_comb", 1: "empty_comb", 2: "bee_head"}#, 3: "bee_middle", 4: "bee_tag", 5: "bee_back",
                  #6: "bee_in_comb", 7: "undef"}
 
