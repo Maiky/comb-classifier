@@ -1,18 +1,14 @@
-import sys
-import combdetection.utils.generator as generator
-import combdetection.config  as conf
-import combdetection.small_conv
-import numpy as np
-import pickle
-import os.path
-from keras.utils import np_utils
-from keras.datasets import mnist
-from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.layers.convolutional import Convolution2D, MaxPooling2D
-from keras.objectives import mse
-from combdetection import util, keras_helpers, models
+
+import combdetection.config as conf
+if not conf.ANALYSE_PLOTS_SHOW:
+    #needed to plot images on flip
+    import matplotlib
+    matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
+import sys
+import numpy as np
+from combdetection import util, keras_helpers, models
 from scipy.misc import imread, imresize
 from combdetection.segmentation import get_superpixel_segmentation
 from skimage.segmentation import mark_boundaries
