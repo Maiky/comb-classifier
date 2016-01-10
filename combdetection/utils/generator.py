@@ -3,7 +3,6 @@ import h5py
 from skimage import data, measure
 import numpy as np
 from skimage import measure
-from matplotlib import pyplot as plt
 import matplotlib.path as mplPath
 # import matplotlib.transforms as trans
 from numpy import random
@@ -14,6 +13,12 @@ import combdetection.config as conf
 from distutils.util import strtobool
 from sklearn.cross_validation import train_test_split
 from scipy.misc import imread, imresize
+
+if not conf.GENERATOR_OUTPUT:
+    #needed to plot images on flip
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
 
 """
 class to organize training-data
