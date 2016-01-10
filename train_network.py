@@ -1,6 +1,12 @@
+import combdetection.config as conf
+if not conf.ANALYSE_PLOTS_SHOW:
+    #needed to plot images on flip
+    import matplotlib
+    matplotlib.use('Agg')
 import combdetection.utils.trainer as tr
 import combdetection.models as md
 import sys
+
 
 if __name__ == '__main__':
     dataset_name = sys.argv[1]
