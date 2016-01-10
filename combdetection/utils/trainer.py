@@ -15,6 +15,10 @@ import combdetection.utils.generator as gen
 import os
 import h5py
 from keras.utils import np_utils
+if not conf.ANALYSE_PLOTS_SHOW:
+    #needed to plot images on flip
+    import matplotlib
+    matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 

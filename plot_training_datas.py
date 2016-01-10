@@ -8,4 +8,4 @@ if __name__ == '__main__':
     trainer = tr.Trainer()
     log = tr.LoggingCallback(log_name)
     log.load_log()
-    #trainer.show_training_performance(log)
+    trainer.show_training_performance(log)
