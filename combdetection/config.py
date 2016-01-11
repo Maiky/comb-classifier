@@ -8,16 +8,16 @@
 GENERATOR_ORIG_SAMPLE_SIZE= (90, 90)
 
 # compression factor for downscaling
-GENERATOR_COMPRESSION_FAKTOR = 4
+GENERATOR_COMPRESSION_FAKTOR = 2
 
 # mininum percentage, for that a generated sample must be overlapped to the original contour
-GENERATOR_MIN_OVERLAPPING= 0.95
-GENERATOR_MIN_OVERLAPPING_BIG= 1
+GENERATOR_MIN_OVERLAPPING= 0.7
+GENERATOR_MIN_OVERLAPPING_BIG= 0.8
 # defines the shift-offset of the sliding window of the generator-image
 GENERATOR_SHIFT = 10
 
 # if set to true, plots for sample-generation will be shown
-GENERATOR_OUTPUT= True
+GENERATOR_OUTPUT= False
 GENERATOR_FULL_LABELED = False
 
 #
