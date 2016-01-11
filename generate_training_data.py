@@ -1,5 +1,6 @@
 import sys
 import combdetection.utils.generator as generator
+import combdetection.config as conf
 import combdetection.neuralnet
 import numpy as np
 
@@ -11,4 +12,4 @@ if __name__ == '__main__':
     target = sys.argv[1]
 
     gen = generator.Generator(target, openForWriting=True)
-    gen.generate_dataset(directory, full_labeled=True)
+    gen.generate_dataset(directory, full_labeled=conf.GENERATOR_FULL_LABELED)

@@ -43,20 +43,9 @@ if __name__ == '__main__':
     image = imread(image_file)
 
 
-
     image, compressed_image, targetsize = util.compress_image_for_network(image_file)
     superpixel_masks, segments = get_superpixel_segmentation(np.transpose([compressed_image]*3, axes=(1,2,0)), 25)
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, sharey=True)
-    #ax = ax.flatten()
-    ax.imshow(mark_boundaries(compressed_image, segments))
-    ax.set_title('superpixel')
-    plt.show()
-    exit()
-    #ax[3].imshow(seg_labeled_image * 255)
-    #ax[3].set_title('labeled image')
-    #ax[0].set_xticks([])
-    #ax[0].set_yticks([])
 
     saliency_network = models.get_saliency_network(train=True)
     saliency_network.load_weights(config_file)
@@ -146,5 +135,6 @@ if __name__ == '__main__':
     if(conf.ANALYSE_PLOTS_SHOW):
         plt.axis('off')
         plt.show()
+    print("done")
     #candidates = util.get_candidates(saliency, saliency_threshold)
     #rois, saliencies = util.extract_rois(candidates, saliency, image)

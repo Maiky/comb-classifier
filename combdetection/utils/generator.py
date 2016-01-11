@@ -18,7 +18,7 @@ if not conf.GENERATOR_OUTPUT:
     #needed to plot images on flip
     import matplotlib
     matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 """
 class to organize training-data
@@ -322,9 +322,15 @@ class Generator(object):
             # print(name)
             # print(image_path+"/"+image_base+'_'+mask_type+'.png')
             # exit()
-            im_mask = imread(image_path + "/" + image_base + '_' + mask_type + '.png', True)
+            im_mask = imread(image_path + "/" + image_base + '_' + mask_type + '.png', flatten=True)
+
+            if (compression is not None):
+                mask_compressed_size = (
+                int(np.round(im_mask.shape[0] / compression)), int(np.round(im_mask.shape[1] / compression)))
+                im_mask = imresize(im_mask, mask_compressed_size)
             # if (compression is not None):
             # @TODO compress whole image
+            im_mask = im_mask/255
 
         orig = imread(file, flatten=True)
 
@@ -356,12 +362,11 @@ class Generator(object):
         # r = np.sin(np.exp((np.sin(x)**3 + np.cos(y)**2)))
 
         if output:
-            fig, ax = plt.subplots(nrows=1, ncols=1)
-            fig1, ax1 = plt.subplots(nrows=1, ncols=1)
-            fig2, ax2 = plt.subplots(nrows=9, ncols=9, sharex=True, sharey=True, )
+            fig, ax = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True,)
+            fig2, ax2 = plt.subplots(nrows=6, ncols=6, sharex=True, sharey=True, )
             ax2 = ax2.flatten()
-            ax.imshow(im_mask, interpolation='nearest', cmap=plt.cm.gray)
-            ax1.imshow(orig, interpolation='nearest', cmap=plt.cm.gray)
+            ax[0].imshow(im_mask, interpolation='nearest', cmap=plt.cm.gray)
+            ax[1].imshow(orig, interpolation='nearest', cmap=plt.cm.gray)
 
         possible_indices = np.transpose(np.nonzero(im_mask))
         all_sample_count = 0
@@ -390,7 +395,6 @@ class Generator(object):
                     # print(sample_size[1])
 
                     sliding_window = im_mask[start_x:(start_x + sample_size[0]), start_y:(start_y + sample_size[1])]
-
                     # print(sliding_window)
                     # print(np.sum(sliding_window))
                     # exit()
@@ -405,13 +409,13 @@ class Generator(object):
                             x_2 = [start_x, start_y + sample_size[1]]
                             y_2 = [start_x + sample_size[0], start_y]
                             y_1 = [start_x + sample_size[0], start_y + sample_size[1]]
-                            ax.plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
+                            #ax.plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
+                                   # linewidth=1)
+                            ax[1].plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
                                     linewidth=1)
-                            ax1.plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
-                                    linewidth=1)
-                            if all_sample_count < 81:
+                            if all_sample_count < 36:
                                 ax2[all_sample_count].imshow(sample, cmap=plt.cm.gray, interpolation='nearest')
-                                ax2[all_sample_count].set_title('%d_%d' % (start_x, start_y))
+                                #ax2[all_sample_count].set_title('%d_%d' % (start_x, start_y))
 
                         sample_vector = sample.reshape(vector_size)
                         samples.append(sample_vector)
@@ -422,6 +426,13 @@ class Generator(object):
         print("finished, found " + str(all_sample_count) + " samples to use")
 
         if output:
+            ax[0].set_xticks([])
+            ax[0].set_yticks([])
+            #ax1.set_xticks([])
+            #ax1.set_yticks([])
+            ax2[0].set_xticks([])
+            ax2[0].set_yticks([])
+            plt.tight_layout()
             plt.show()
 
         dset = grp.create_dataset(mask_type, data=samples)
