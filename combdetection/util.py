@@ -6,7 +6,6 @@ from os.path import isfile, join, splitext, exists, isdir
 import itertools
 import shutil
 from tempfile import NamedTemporaryFile
-import  cv2
 
 import h5py
 import numpy as np
@@ -215,14 +214,14 @@ def compress_image_for_network_old(image_path, filter_imsize):
 
 def compress_image_for_network(image_path, grey=True):
     if grey:
-        image = cv2.imread(image_path, cv2.CV_8UC1)
+        image = imread(image_path, flatten=True)
     else:
-        image = cv2.imread(image_path)
+        image = imread(image_path)
 
     if(combdetection.config.GENERATOR_COMPRESSION_FAKTOR is not None):
         targetsize = np.round(np.array(image.shape)/combdetection.config.GENERATOR_COMPRESSION_FAKTOR).astype(int)
         print("new size" + str(targetsize))
-        compressed_image = cv2.resize(image, (targetsize[1], targetsize[0]))
+        compressed_image = imresize(image, (targetsize[0], targetsize[1]))
     else:
         targetsize = image.shape
         compressed_image = image.clone()

@@ -120,7 +120,7 @@ class Trainer():
                   show_accuracy=True, verbose=1, validation_data=(X_test, Y_test))
 
 
-        return log
+        return log, X_test, Y_test
 
 
     def show_training_performance(self, log, save_plots = True):

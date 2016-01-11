@@ -14,5 +14,8 @@ if __name__ == '__main__':
 
     model = md.get_saliency_network(train=True)
     trainer = tr.Trainer()
-    hist = trainer.fit(model, dataset_name,nn_name,nb_epoch=100)
+    hist, X_test, Y_test = trainer.fit(model, dataset_name,nn_name,nb_epoch=100)
+    score = model.evaluate(X_test, Y_test, show_accuracy=True, verbose=0)
+    print('Test score:', score[0])
+    print('Test accuracy:', score[1])
     trainer.show_training_performance(hist)
