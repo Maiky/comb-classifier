@@ -330,7 +330,7 @@ class Generator(object):
                 im_mask = imresize(im_mask, mask_compressed_size)
             # if (compression is not None):
             # @TODO compress whole image
-            im_mask = im_mask/255
+            im_mask = im_mask/np.max(im_mask)
 
         orig = imread(file, flatten=True)
 
