@@ -331,7 +331,8 @@ class Generator(object):
                 im_mask = imresize(im_mask, mask_compressed_size)
             # if (compression is not None):
             # @TODO compress whole image
-            im_mask = stats.threshold(im_mask, threshmin=0, threshmax=1000, newval=1)
+            im_mask = stats.threshold(im_mask, threshmin=0.1, threshmax=10000, newval=0)
+            im_mask = stats.threshold(im_mask, threshmin=0, threshmax=0.1, newval=1)
 
         orig = imread(file, flatten=True)
 
