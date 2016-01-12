@@ -13,6 +13,7 @@ import combdetection.config as conf
 from distutils.util import strtobool
 from sklearn.cross_validation import train_test_split
 from scipy.misc import imread, imresize
+from scipy import stats
 
 if not conf.GENERATOR_OUTPUT:
     #needed to plot images on flip
@@ -330,7 +331,7 @@ class Generator(object):
                 im_mask = imresize(im_mask, mask_compressed_size)
             # if (compression is not None):
             # @TODO compress whole image
-            im_mask = im_mask/np.max(im_mask)
+            im_mask = stats.threshold(im_mask, threshmin=0, threshmax=1000, newval=1)
 
         orig = imread(file, flatten=True)
 
