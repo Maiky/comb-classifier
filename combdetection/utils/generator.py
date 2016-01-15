@@ -8,7 +8,6 @@ import matplotlib.path as mplPath
 from numpy import random
 import sys
 import os, glob
-# import cv2
 import combdetection.config as conf
 from distutils.util import strtobool
 from sklearn.cross_validation import train_test_split
@@ -381,13 +380,16 @@ class Generator(object):
         contour_size = None
         thres = conf.GENERATOR_MIN_OVERLAPPING
         if not "bee" in mask_type:
-            contour_size = int(np.round(60/compression))
+            big_mask = True
             thres = conf.GENERATOR_MIN_OVERLAPPING_BIG
             print("big mask detected, start shifting..")
-        elif "tag" in mask_type or "head" in mask_type:
-            contour_size = int(2**np.round(50/compression))
-            print("small contours detected, using not overlapping-threshold")
-            small_mask = True
+        elif "tag" in mask_type or "middle" in mask_type or "bee_in_comb":
+            contour_size = int(np.round(50/compression)**2)
+            print("small contours detected, using " +str(contour_size)+" for matching")
+        elif "head" in mask_type:
+            contour_size = int(np.round(60/compression))
+            print("small contours detected, using " +str(contour_size)+" for matching")
+
         vals = []
         # iterate over all positions
         for current_position in possible_indices:
@@ -415,8 +417,13 @@ class Generator(object):
                     #print(np.sum(sliding_window) >= contour_size)
                     #print(contour_size is not None)
                     #print((contour_size is not None)  & (np.sum(sliding_window) >= contour_size))
-
-                    if ((np.sum(sliding_window) / max_machting) >= thres) | ((contour_size is not None)  & (np.sum(sliding_window) >= contour_size)):
+                    add = False
+                    if ((np.sum(sliding_window) / max_machting) >= thres):
+                        add = True
+                    elif contour_size is not None :
+                        if np.sum(sliding_window) >= contour_size:
+                            add = True
+                    if add:
                         sample = orig[start_x:(start_x + sample_size[0]), start_y:(start_y + sample_size[1])]
 
                         # if output  is activated draw frame and add sample to output
