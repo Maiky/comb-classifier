@@ -19,6 +19,7 @@ if not conf.GENERATOR_OUTPUT:
     #needed to plot images on flip
     import matplotlib
     matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
 """
@@ -249,6 +250,7 @@ class Generator(object):
             grp = self.f.require_group(dataset_group)
             grp.attrs['included_classes']= str(conf.CLASS_LABEL_MAPPING)
             grp.attrs['shift']= str(conf.GENERATOR_SHIFT)
+            grp.attrs['min_overlapping_small']= str(conf.GENERATOR_MIN_OVERLAPPING_SMALL)
             grp.attrs['min_overlapping']= str(conf.GENERATOR_MIN_OVERLAPPING)
             grp.attrs['min_overlapping_big']= str(conf.GENERATOR_MIN_OVERLAPPING_BIG)
             #  if the image is full labeled, generate masks out of labeled-image
@@ -289,7 +291,7 @@ class Generator(object):
             print("nothing to do in " + name + "/" + mask_type + ", type exists")
             return
         print("start processing " + name)
-        output = conf.GENERATOR_OUTPUT
+        output = conf.GENERATOR_OUTPUT | conf.ANALYSE_PLOTS_SAVE
 
         samples = []
 
@@ -364,11 +366,11 @@ class Generator(object):
         # r = np.sin(np.exp((np.sin(x)**3 + np.cos(y)**2)))
 
         if output:
-            fig, ax = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True,)
+            fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, sharey=True,)
             fig2, ax2 = plt.subplots(nrows=6, ncols=6, sharex=True, sharey=True, )
             ax2 = ax2.flatten()
-            ax[0].imshow(im_mask, interpolation='nearest', cmap=plt.cm.gray)
-            ax[1].imshow(orig, interpolation='nearest', cmap=plt.cm.gray)
+            #ax[0].imshow(im_mask, interpolation='nearest', cmap=plt.cm.gray)
+            ax.imshow(orig, interpolation='nearest', cmap=plt.cm.gray)
 
         possible_indices = np.transpose(np.nonzero(im_mask))
         all_sample_count = 0
@@ -376,66 +378,103 @@ class Generator(object):
         max_sample_count = possible_indices.shape[0]
         max_machting = (sample_size[0] * sample_size[1])
         big_mask = False
+        contour_size = None
         thres = conf.GENERATOR_MIN_OVERLAPPING
         if not "bee" in mask_type:
-            big_mask = True
+            contour_size = int(np.round(60/compression))
             thres = conf.GENERATOR_MIN_OVERLAPPING_BIG
-            print("big mask dected, start shifting..")
+            print("big mask detected, start shifting..")
+        elif "tag" in mask_type or "head" in mask_type:
+            contour_size = 150#int(np.round(24*24/compression))
+            print("small contours detected, using not overlapping-threshold")
+            small_mask = True
+        vals = []
         # iterate over all positions
         for current_position in possible_indices:
             # if position is in shift, ignore
             if ((i % conf.GENERATOR_SHIFT) == 0)| (not big_mask):
-                # print(current_position)
+                #print(current_position)
                 start_x = int(np.round(current_position[0] - sample_size[0] / 2))
                 start_y = int(round(current_position[1] - sample_size[1] / 2))
 
-                if (start_x >= 0) & (start_y >= 0) & (start_x + sample_size[0] <= orig.shape[0]) & (
-                        start_y + sample_size[1] <= orig.shape[1]):
+                if (start_x >= 0) & (start_y >= 0) & (start_x + sample_size[0] <= orig.shape[0]) & \
+                        (start_y + sample_size[1] <= orig.shape[1]):
                     # print(start_x)
                     # print(start_y)
                     # print(sample_size[0])
                     # print(sample_size[1])
 
                     sliding_window = im_mask[start_x:(start_x + sample_size[0]), start_y:(start_y + sample_size[1])]
+                    vals.append(np.sum(sliding_window))
                     # print(sliding_window)
                     # print(np.sum(sliding_window))
                     # exit()
                     # print(np.sum(sliding_window)/max_machting)
                     # check if windows is overlapping enough
-                    if (np.sum(sliding_window) / max_machting) >= thres:
+                    #print(((np.sum(sliding_window) / max_machting) >= thres) | ((contour_size is not None)  & (np.sum(sliding_window) >= contour_size)))
+                    #print(np.sum(sliding_window) >= contour_size)
+                    #print(contour_size is not None)
+                    #print((contour_size is not None)  & (np.sum(sliding_window) >= contour_size))
+
+                    if ((np.sum(sliding_window) / max_machting) >= thres) | ((contour_size is not None)  & (np.sum(sliding_window) >= contour_size)):
                         sample = orig[start_x:(start_x + sample_size[0]), start_y:(start_y + sample_size[1])]
 
                         # if output  is activated draw frame and add sample to output
-                        if (output):
+                        if output:
                             x_1 = [start_x, start_y]
                             x_2 = [start_x, start_y + sample_size[1]]
                             y_2 = [start_x + sample_size[0], start_y]
                             y_1 = [start_x + sample_size[0], start_y + sample_size[1]]
                             #ax.plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
                                    # linewidth=1)
-                            ax[1].plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
+                            ax.plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
                                     linewidth=1)
-                            if all_sample_count < 36:
-                                ax2[all_sample_count].imshow(sample, cmap=plt.cm.gray, interpolation='nearest')
                                 #ax2[all_sample_count].set_title('%d_%d' % (start_x, start_y))
 
                         sample_vector = sample.reshape(vector_size)
                         samples.append(sample_vector)
                         all_sample_count += 1
+                    else:
+                        if output:
+                            x_1 = [start_x, start_y]
+                            x_2 = [start_x, start_y + sample_size[1]]
+                            y_2 = [start_x + sample_size[0], start_y]
+                            y_1 = [start_x + sample_size[0], start_y + sample_size[1]]
+                            #ax.plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
+                                   # linewidth=1)
+                            #ax.plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
+                                 #   '-.', linewidth=1)
+            if(len(vals)== 200):
+                print(vals)
             i += 1
             sys.stderr.write('\r %d/%d:, total for mask-type: %d  ' % (i, max_sample_count, all_sample_count))
             sys.stderr.flush()
+
         print("finished, found " + str(all_sample_count) + " samples to use")
 
         if output:
-            ax[0].set_xticks([])
-            ax[0].set_yticks([])
+            if all_sample_count >= 36:
+                indexes = np.random.choice(len(samples), 36)
+                i = 0
+                for ind in indexes:
+                    #print(ind)
+                    ex = samples[ind]
+                    ax2[i].imshow(ex.reshape((sample_size[0], sample_size[1])), cmap=plt.cm.gray, interpolation='nearest')
+                    i += 1
+            ax.set_xticks([])
+            ax.set_yticks([])
             #ax1.set_xticks([])
             #ax1.set_yticks([])
             ax2[0].set_xticks([])
             ax2[0].set_yticks([])
             plt.tight_layout()
-            plt.show()
+            if(conf.ANALYSE_PLOTS_SAVE):
+                fnm = conf.ANALYSE_PLOTS_PATH+os.path.basename(file)+'_'+mask_type+'_mask.png'
+                fig.savefig(fnm)
+                fns = conf.ANALYSE_PLOTS_PATH+os.path.basename(file)+'_'+mask_type+'_samples.png'
+                fig2.savefig(fns)
+            if(conf.GENERATOR_OUTPUT):
+                plt.show()
 
         dset = grp.create_dataset(mask_type, data=samples)
         dset.attrs['class_label'] = mask_type

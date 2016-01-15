@@ -33,6 +33,31 @@ def get_saliency_image(Ysamples, targetsize):
     return image_saliency
 
 
+
+def get_color_mapped_image(nn_output):
+    image = np.zeros((nn_output.shape[0], nn_output.shape[1], 3))
+    for i in range(nn_output.shape[0]):
+        for j in range(nn_output.shape[1]):
+            probs = nn_output[i][j]
+            pk = np.argmax(probs)
+            #print(probs[pk])
+            #print((i,j))
+            #print(pk)
+            #print(conf.CLASS_COLOR_MAPPING.get(pk))
+            value = np.zeros((len(conf.CLASS_LABEL_MAPPING),3))
+            for k,v in conf.CLASS_COLOR_MAPPING.items():
+                prob = probs[k]
+                if(prob > 0.1):
+                    value[k]= np.asarray(v)*prob
+            image[i,j] =np.sum(value, axis=0) #conf.CLASS_COLOR_MAPPING.get(pk) #
+            #print(image[i,j])
+            #print((i,j))
+
+    #print(image[157:177, 220:240])
+    #print(image[177,240])
+    #print(image[0,0])
+    return image
+
 if __name__ == '__main__':
     network_name = sys.argv[1]
     image_file = sys.argv[2]
@@ -44,7 +69,7 @@ if __name__ == '__main__':
 
 
     image, compressed_image, targetsize = util.compress_image_for_network(image_file)
-    superpixel_masks, segments = get_superpixel_segmentation(np.transpose([compressed_image]*3, axes=(1,2,0)), 25)
+    #superpixel_masks, segments = get_superpixel_segmentation(np.transpose([compressed_image]*3, axes=(1,2,0)), 25)
 
 
     saliency_network = models.get_saliency_network(train=True)
@@ -68,65 +93,70 @@ if __name__ == '__main__':
     f = keras_helpers.get_convolution_function(saliency_network, saliency_conv_model)
     saliency = f(
            compressed_image.reshape((1, 1, compressed_image.shape[0], compressed_image.shape[1])))
+
+
+
     im = np.transpose(saliency[0][0], axes=(1,2,0)).copy()
-    im = imresize(im,(compressed_image.shape[0], compressed_image.shape[1]))
-    superpixel_masks, segments = get_superpixel_segmentation(np.transpose([compressed_image]*3, axes=(1,2,0)), 1000)
-    seg_labeled_image = np.zeros((im.shape[0], im.shape[1], im.shape[2]))
-    labeled_image = np.zeros((im.shape[0], im.shape[1], im.shape[2]))
+    color_mapped = get_color_mapped_image(im)
+    im = imresize(color_mapped,(compressed_image.shape[0], compressed_image.shape[1]))
 
-    for mask in superpixel_masks:
-        class_mask = np.transpose([mask]*im.shape[2], axes=(1,2,0))
-        sp = im * class_mask
-        #print(np.count_nonzero(sp))
-        cl_res = sp.reshape((sp.shape[0]*sp.shape[1], sp.shape[2]))
-        classes = np.argmax(sp,axis=2)
-        ct_classes = []
-        for i in range(3):
-            ct = np.sum(np.asarray((classes == i)).astype(int)*mask)
-            #print("amount "+str(i)+":"+str(ct))
-            ct_classes.append(ct)
-        #print(ct_classes)
-        class_label = np.argmax(ct_classes)
-        #print(class_label)
-        #mean = np.mean(classes)
-        #print(mean)
-        #class_label = int(np.round(mean))
-        #print(class_label)
+    #  superpixel_masks, segments = get_superpixel_segmentation(np.transpose([compressed_image]*3, axes=(1,2,0)), 1000)
+    # seg_labeled_image = np.zeros((im.shape[0], im.shape[1], im.shape[2]))
+    # labeled_image = np.zeros((im.shape[0], im.shape[1], im.shape[2]))
+    #
+    # for mask in superpixel_masks:
+    #     class_mask = np.transpose([mask]*im.shape[2], axes=(1,2,0))
+    #     sp = im * class_mask
+    #     #print(np.count_nonzero(sp))
+    #     cl_res = sp.reshape((sp.shape[0]*sp.shape[1], sp.shape[2]))
+    #     classes = np.argmax(sp,axis=2)
+    #     ct_classes = []
+    #     for i in range(3):
+    #         ct = np.sum(np.asarray((classes == i)).astype(int)*mask)
+    #         #print("amount "+str(i)+":"+str(ct))
+    #         ct_classes.append(ct)
+    #     #print(ct_classes)
+    #     class_label = np.argmax(ct_classes)
+    #     #print(class_label)
+    #     #mean = np.mean(classes)
+    #     #print(mean)
+    #     #class_label = int(np.round(mean))
+    #     #print(class_label)
+    #
+    #     color = conf.CLASS_COLOR_MAPPING.get(class_label)
+    #     labeled_mask = class_mask * color
+    #     #
+    #     #ig, ax = plt.subplots(nrows=1, ncols=1)
+    #     #ax[0].imshow(image, cmap=plt.cm.gray)
+    #     #ax[0].setTitle("original")
+    #     #ax.imshow(labeled_mask)
+    #     #plt.show()
+    #     seg_labeled_image = seg_labeled_image + labeled_mask
+    #
+    #     labeled_image = labeled_image + sp
+    #     #mean = np.mean(sp)
+    #     #print(mean.shape)
+    #     #class_label = np.argmax(mean)
+    #
+    #
+    # #im = np.reshape(im, (im.shape[1], im.shape[2], im.shape[0]))
+    # #Y_classes= np.asarray(im)
+    # #print(im.shape)
+    # #sal_image = get_saliency_image(im, targetsize)
+    # #norm =im * 255
 
-        color = conf.CLASS_COLOR_MAPPING.get(class_label)
-        labeled_mask = class_mask * color
-        #
-        #ig, ax = plt.subplots(nrows=1, ncols=1)
-        #ax[0].imshow(image, cmap=plt.cm.gray)
-        #ax[0].setTitle("original")
-        #ax.imshow(labeled_mask)
-        #plt.show()
-        seg_labeled_image = seg_labeled_image + labeled_mask
-
-        labeled_image = labeled_image + sp
-        #mean = np.mean(sp)
-        #print(mean.shape)
-        #class_label = np.argmax(mean)
-
-
-    #im = np.reshape(im, (im.shape[1], im.shape[2], im.shape[0]))
-    #Y_classes= np.asarray(im)
-    #print(im.shape)
-    #sal_image = get_saliency_image(im, targetsize)
-    #norm =im * 255
-
-    fig, ax = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True)
+    fig, ax = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
     ax = ax.flatten()
     ax[0].imshow(compressed_image, cmap=plt.cm.gray)
     ax[0].set_title('original image')
     #ax[0].setTitle("original")
-    ax[1].imshow(labeled_image*255)
+    ax[1].imshow(im)
     ax[1].set_title('network output')
     #ax[2] = fig[2].add_subplot(1, 1, 1)
-    ax[2].imshow(mark_boundaries(compressed_image, segments))
-    ax[2].set_title('superpixel')
-    ax[3].imshow(seg_labeled_image * 255)
-    ax[3].set_title('labeled image')
+    #ax[2].imshow(mark_boundaries(compressed_image, segments))
+    #ax[2].set_title('superpixel')
+    #ax[3].imshow(seg_labeled_image * 255)
+    #ax[3].set_title('labeled image')
     ax[0].set_xticks([])
     ax[0].set_yticks([])
     if(conf.ANALYSE_PLOTS_SAVE):

@@ -4,7 +4,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.objectives import mse
-import combdetection.config
+import combdetection.config as conf
 
 def get_saliency_network_old(train=True):
     model = Sequential()
@@ -25,11 +25,11 @@ def get_saliency_network_old(train=True):
 def get_saliency_network(train=False):
 
     batch_size = 128
-    nb_classes = 3
+    nb_classes = len(conf.CLASS_LABEL_MAPPING)
     nb_epoch = 15
 
     # input image dimensions
-    img_rows, img_cols = combdetection.config.NETWORK_SAMPLE_SIZE[0], combdetection.config.NETWORK_SAMPLE_SIZE[1]
+    img_rows, img_cols = conf.NETWORK_SAMPLE_SIZE[0], conf.NETWORK_SAMPLE_SIZE[1]
     # number of convolutional filters to use
     nb_filters = 32
     # size of pooling area for max pooling

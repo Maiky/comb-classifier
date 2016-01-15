@@ -8,7 +8,6 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import generic_utils
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 from keras.layers.core import Flatten
-from sklearn.metrics import auc, label_ranking_average_precision_score,accuracy_score, confusion_matrix,coverage_error, label_ranking_loss
 import theano
 import combdetection.config as conf
 import combdetection.utils.generator as gen

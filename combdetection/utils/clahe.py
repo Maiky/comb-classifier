@@ -1,16 +1,11 @@
-import cv2
+
 import sys
 import os.path
 import glob
-
-img = cv2.imread('Cam_1_20150901065804_457410.jpeg',0)
-
-
-def createclahe():
-    # create a CLAHE object (Arguments are optional).
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-    cl1 = clahe.apply(img)
-    cv2.imwrite('clahe_3.jpg',cl1)
+from skimage.exposure import  equalize_adapthist
+from scipy.misc import imsave, imread
+from skimage.util import img_as_float
+import numpy as np
 
 
 
@@ -36,9 +31,11 @@ if __name__ == '__main__':
 
     for file in files:
         print('process '+os.path.realpath(file))
-        img = cv2.imread(os.path.realpath(file),0)
-        # create a CLAHE object (Arguments are optional).
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        cl1 = clahe.apply(img)
+        img = imread(os.path.realpath(file),flatten=True)
+        #img = img_as_float(img/255)
+        #print(img.shape)
+        #print(np.max(img))
+        cl1 = equalize_adapthist(img/255)
         print('generate '+'clahe_'+os.path.basename(file))
-        cv2.imwrite('clahe_'+os.path.basename(file),cl1)
+        imsave('clahe_'+os.path.basename(file),cl1)
+        #cv2.imwrite('clahe_'+os.path.basename(file),cl1)
