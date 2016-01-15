@@ -385,7 +385,7 @@ class Generator(object):
             thres = conf.GENERATOR_MIN_OVERLAPPING_BIG
             print("big mask detected, start shifting..")
         elif "tag" in mask_type or "head" in mask_type:
-            contour_size = 150#int(np.round(24*24/compression))
+            contour_size = int(2**np.round(50/compression))
             print("small contours detected, using not overlapping-threshold")
             small_mask = True
         vals = []
@@ -469,9 +469,10 @@ class Generator(object):
             ax2[0].set_yticks([])
             plt.tight_layout()
             if(conf.ANALYSE_PLOTS_SAVE):
-                fnm = conf.ANALYSE_PLOTS_PATH+os.path.basename(file)+'_'+mask_type+'_mask.png'
+                fn,ext1 = os.path.splitext(os.path.basename(file))
+                fnm = conf.ANALYSE_PLOTS_PATH+fn+'_'+mask_type+'_mask.png'
                 fig.savefig(fnm)
-                fns = conf.ANALYSE_PLOTS_PATH+os.path.basename(file)+'_'+mask_type+'_samples.png'
+                fns = conf.ANALYSE_PLOTS_PATH+fn+'_'+mask_type+'_samples.png'
                 fig2.savefig(fns)
             if(conf.GENERATOR_OUTPUT):
                 plt.show()

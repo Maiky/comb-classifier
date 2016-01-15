@@ -1,6 +1,13 @@
+import combdetection.config as conf
+if not conf.GENERATOR_OUTPUT:
+    #needed to plot images on flip
+    import matplotlib
+    matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
 import sys
 import combdetection.utils.generator as generator
-import combdetection.config as conf
+
 import combdetection.neuralnet
 import numpy as np
 
