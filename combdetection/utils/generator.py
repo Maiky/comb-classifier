@@ -11,7 +11,8 @@ import os, glob
 import combdetection.config as conf
 from distutils.util import strtobool
 from sklearn.cross_validation import train_test_split
-from scipy.misc import imread, imresize
+from skimage.exposure import  equalize_adapthist
+from scipy.misc import imread, imresize, imsave
 from scipy import stats
 
 if not conf.GENERATOR_OUTPUT:
@@ -76,6 +77,8 @@ class Generator(object):
             X_tmp, y_tmp = self._add_samples(dset, equal_class_sizes, max_size_per_set=max_size_per_set)
             X.extend(X_tmp)
             y.extend(y_tmp)
+        #if(equal_class_sizes):
+
         print(" got total" + str(np.shape(X)) + " samples..")
         print(" generate training/test-data with test-size:" + str(test_size))
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
@@ -192,9 +195,12 @@ class Generator(object):
         distances = [np.linalg.norm(v - value) for v in array]
         idx = np.asarray(distances).argmin()
         v = np.zeros(8)
-        if(conf.CLASS_MERGES is not None):
-            if(conf.CLASS_MERGES.get(idx) is not None):
-                idx = conf.CLASS_MERGES.get(idx)
+        merge = conf.CLASS_MERGES
+        if(conf.GENERATOR_BEE_MERGE):
+            merge = {3:0,5:0,4:0,6:0}
+        if(merge is not None):
+            if(merge.get(idx) is not None):
+                idx = merge.get(idx)
         v[idx] = 1
         return color_mapping_arr[idx], v
 
@@ -208,11 +214,19 @@ class Generator(object):
             mask = imresize(mask, (targetsize[0], targetsize[1]))
 
         masked_mapped, masks = self._generate_labels(mask)
+        if(conf.GENERATOR_OUTPUT):
+            fig, ax = plt.subplots(ncols=1, nrows=1)
+            ax.imshow(masked_mapped)
+            plt.show()
+        if(conf.ANALYSE_PLOTS_SAVE):
+            fnm,ext1 = os.path.splitext(os.path.basename(fn))
+            file = conf.ANALYSE_PLOTS_PATH+"_labels_"+fnm+".png"
+            imsave(file, masked_mapped)
         masks = np.transpose(masks, axes=(2, 0, 1))
         return masks
 
     def generate_dataset(self, image_path, full_labeled=False, mask_type="",
-                         compression=conf.GENERATOR_COMPRESSION_FAKTOR):
+                         compression=conf.GENERATOR_COMPRESSION_FAKTOR, use_clahe=False):
         # check if path is directory or file,
         # parse directory if necessary
         if not os.path.isfile(image_path):
@@ -252,24 +266,26 @@ class Generator(object):
             grp.attrs['min_overlapping_small']= str(conf.GENERATOR_MIN_OVERLAPPING_SMALL)
             grp.attrs['min_overlapping']= str(conf.GENERATOR_MIN_OVERLAPPING)
             grp.attrs['min_overlapping_big']= str(conf.GENERATOR_MIN_OVERLAPPING_BIG)
+            grp.attrs['use_clahe']= str(use_clahe)
             #  if the image is full labeled, generate masks out of labeled-image
             if (full_labeled):
                 grp.attrs['full_labeled'] = "YES"
                 image_base, extention = os.path.splitext(os.path.basename(file))
                 image_path, img = os.path.split(os.path.abspath(file))
                 fn = image_path + "/" + image_base + '_' + 'full_labeled' + '.jpg'
+                print("start processing " + image_base)
                 masks = self.generate_masks_for_classes(os.path.realpath(fn))
                 for mask_type in mask_types:
                     im = masks[mask_type[0]]
                     self._generate_samples_for_mask(grp, os.path.realpath(file), mask_type[1], accept_outside=False,
-                                                    compression=compression, im_mask=im)
+                                                    compression=compression, im_mask=im, use_clahe=use_clahe)
             else:
                 grp.attrs['full_labeled'] = "NO"
                 for mask_type in mask_types:
                     self._generate_samples_for_mask(grp, os.path.realpath(file), mask_type[1], accept_outside=False,
-                                                    compression=compression)
+                                                    compression=compression, use_clahe=use_clahe)
 
-    def _generate_samples_for_mask(self, grp, file, mask_type, im_mask=None, accept_outside=False, compression=None):
+    def _generate_samples_for_mask(self, grp, file, mask_type, im_mask=None, accept_outside=False, compression=None, use_clahe=False):
         """
         Return the x intercept of the line M{y=m*x+b}.  The X{x intercept}
         of a line is the point at which it crosses the x axis (M{y=0}).
@@ -289,7 +305,7 @@ class Generator(object):
         if (mask_type in grp):
             print("nothing to do in " + name + "/" + mask_type + ", type exists")
             return
-        print("start processing " + name)
+
         output = conf.GENERATOR_OUTPUT | conf.ANALYSE_PLOTS_SAVE
 
         samples = []
@@ -306,9 +322,9 @@ class Generator(object):
         # size for target-vector
         vector_size = sample_size[0] * sample_size[1]
 
-        print("generate samples for mask-type:" + mask_type + " with orig-smaple-size:" + str(
-            orig_size) + " max-shift:" + str(max_shift) + "and compression:" + str(compression) + ".")
-        print("new size of samples:" + str(sample_size) + " and as vector:" + str(vector_size))
+        print("generate samples for mask-type:" + mask_type + " with sample-size:" +str(sample_size)+"("+ str(orig_size) + ")")
+        # max-shift:" + str(max_shift) + "and compression:" + str(compression) + ".")
+        #sprint("new size of samples:" + str(sample_size) + " and as vector:" + str(vector_size))
         grp.attrs['compression_factor'] = compression
         grp.attrs['orig_sample_size'] = orig_size
         grp.attrs['compr_sample_size'] = sample_size
@@ -336,6 +352,9 @@ class Generator(object):
             im_mask = stats.threshold(im_mask, threshmin=0, threshmax=0.1, newval=1)
 
         orig = imread(file, flatten=True)
+        if(use_clahe):
+            orig = equalize_adapthist(orig/255)
+            orig *= 255
 
         grp.attrs['orig_image_size'] = str(orig.shape)
 
@@ -387,6 +406,7 @@ class Generator(object):
             contour_size = int(np.round(50/compression)**2)
             print("small contours detected, using " +str(contour_size)+" for matching")
         elif "head" in mask_type:
+            print("in head")
             contour_size = int(np.round(60/compression))
             print("small contours detected, using " +str(contour_size)+" for matching")
 
@@ -451,8 +471,6 @@ class Generator(object):
                                    # linewidth=1)
                             #ax.plot([x_1[1], x_2[1], y_1[1], y_2[1], x_1[1]], [x_1[0], x_2[0], y_1[0], y_2[0], x_1[0]],
                                  #   '-.', linewidth=1)
-            if(len(vals)== 200):
-                print(vals)
             i += 1
             sys.stderr.write('\r %d/%d:, total for mask-type: %d  ' % (i, max_sample_count, all_sample_count))
             sys.stderr.flush()

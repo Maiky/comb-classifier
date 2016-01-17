@@ -10,3 +10,5 @@ saved_networks
 logs
 plots
 data/full_labeled
+data/bienen
+data

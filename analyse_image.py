@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import sys
 import numpy as np
 from combdetection import util, keras_helpers, models
-from scipy.misc import imread, imresize
+from scipy.misc import imread, imresize, imsave
+import cv2
 from combdetection.segmentation import get_superpixel_segmentation
 from skimage.segmentation import mark_boundaries
 
@@ -35,7 +36,12 @@ def get_saliency_image(Ysamples, targetsize):
 
 
 def get_color_mapped_image(nn_output):
+
+    comb_image = np.zeros((nn_output.shape[0], nn_output.shape[1], 3))
     image = np.zeros((nn_output.shape[0], nn_output.shape[1], 3))
+
+    bee_image = np.zeros((nn_output.shape[0], nn_output.shape[1], 3))
+
     for i in range(nn_output.shape[0]):
         for j in range(nn_output.shape[1]):
             probs = nn_output[i][j]
@@ -44,19 +50,29 @@ def get_color_mapped_image(nn_output):
             #print((i,j))
             #print(pk)
             #print(conf.CLASS_COLOR_MAPPING.get(pk))
-            value = np.zeros((len(conf.CLASS_LABEL_MAPPING),3))
+            value =  np.zeros((len(conf.CLASS_LABEL_MAPPING),3))
+            value_comb = np.zeros((len(conf.CLASS_LABEL_MAPPING),3))
+            value_bee = np.zeros((len(conf.CLASS_LABEL_MAPPING),3))
             for k,v in conf.CLASS_COLOR_MAPPING.items():
                 prob = probs[k]
                 if(prob > 0.1):
-                    value[k]= np.asarray(v)*prob
-            image[i,j] =np.sum(value, axis=0) #conf.CLASS_COLOR_MAPPING.get(pk) #
+                    if("bee" in conf.CLASS_LABEL_MAPPING.get(k)):
+                        value_bee[k]= np.asarray(v)*prob
+                        value[k]= np.asarray(v)*prob
+                    else:
+                        value_comb[k]= np.asarray(v)*prob
+                        value[k]= np.asarray(v)*prob
+            comb_image[i,j] =np.sum(value_comb, axis=0)
+            bee_image[i,j] =np.sum(value_bee, axis=0)
+            image[i,j] =np.sum(value, axis=0)
+            #conf.CLASS_COLOR_MAPPING.get(pk) #
             #print(image[i,j])
             #print((i,j))
 
     #print(image[157:177, 220:240])
     #print(image[177,240])
     #print(image[0,0])
-    return image
+    return image, comb_image, bee_image
 
 if __name__ == '__main__':
     network_name = sys.argv[1]
@@ -97,8 +113,10 @@ if __name__ == '__main__':
 
 
     im = np.transpose(saliency[0][0], axes=(1,2,0)).copy()
-    color_mapped = get_color_mapped_image(im)
-    im = imresize(color_mapped,(compressed_image.shape[0], compressed_image.shape[1]))
+    im, comb_image, bee_image = get_color_mapped_image(im)
+    comb_im = imresize(comb_image,(compressed_image.shape[0], compressed_image.shape[1]))
+    bee_im = imresize(bee_image,(compressed_image.shape[0], compressed_image.shape[1]))
+    im = imresize(im,(compressed_image.shape[0], compressed_image.shape[1]))
 
     #  superpixel_masks, segments = get_superpixel_segmentation(np.transpose([compressed_image]*3, axes=(1,2,0)), 1000)
     # seg_labeled_image = np.zeros((im.shape[0], im.shape[1], im.shape[2]))
@@ -145,13 +163,21 @@ if __name__ == '__main__':
     # #sal_image = get_saliency_image(im, targetsize)
     # #norm =im * 255
 
-    fig, ax = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
+    fig, ax = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True)
+    fig.patch.set_visible(False)
     ax = ax.flatten()
     ax[0].imshow(compressed_image, cmap=plt.cm.gray)
     ax[0].set_title('original image')
     #ax[0].setTitle("original")
     ax[1].imshow(im)
+    imsave( conf.ANALYSE_PLOTS_PATH+network_name+"_masks.png", im)
     ax[1].set_title('network output')
+    ax[2].imshow(comb_im)
+    imsave( conf.ANALYSE_PLOTS_PATH+network_name+"_combs.png", comb_im)
+    ax[2].set_title('combs')
+    ax[3].imshow(bee_im)
+    imsave( conf.ANALYSE_PLOTS_PATH+network_name+"_bees.png", bee_im)
+    ax[3].set_title('bees')
     #ax[2] = fig[2].add_subplot(1, 1, 1)
     #ax[2].imshow(mark_boundaries(compressed_image, segments))
     #ax[2].set_title('superpixel')
@@ -159,6 +185,7 @@ if __name__ == '__main__':
     #ax[3].set_title('labeled image')
     ax[0].set_xticks([])
     ax[0].set_yticks([])
+    plt.tight_layout()
     if(conf.ANALYSE_PLOTS_SAVE):
         fn = conf.ANALYSE_PLOTS_PATH+network_name+"_labeled_image.png"
         plt.savefig(fn)

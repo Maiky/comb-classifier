@@ -70,7 +70,7 @@ class Trainer():
         #load generator-class and get training samples
         g = gen.Generator(dataset_name)
         g.show_details()
-        X_train, X_test, y_train, y_test= g.load_traindata()
+        X_train, X_test, y_train, y_test= g.load_traindata(equal_class_sizes=False, max_size_per_set=40000)
         X_train = np.asarray(X_train)
         X_test = np.asarray(X_test)
         y_test = np.asarray(y_test)
