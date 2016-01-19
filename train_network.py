@@ -19,3 +19,4 @@ if __name__ == '__main__':
     print('Test score:', score[0])
     print('Test accuracy:', score[1])
     trainer.show_training_performance(hist)
+    trainer.save_validation_set(X_test, Y_test, nn_name)

@@ -13,6 +13,7 @@ from skimage.feature import peak_local_max
 from sklearn.cross_validation import ShuffleSplit
 from keras.utils import generic_utils
 from scipy.misc import imread, imresize
+from skimage.exposure import  equalize_adapthist
 
 import combdetection.config
 
@@ -227,7 +228,12 @@ def compress_image_for_network(image_path, grey=True):
         compressed_image = image.clone()
 
     image = image.astype(np.float32) / 255
-    compressed_image = compressed_image.astype(np.float32) / 255
+
+
+    if(combdetection.config.GENERATOR_USE_CLAHE):
+        compressed_image = equalize_adapthist(compressed_image).astype(np.float32)
+    else:
+        compressed_image = compressed_image.astype(np.float32) / 255
 
     return image, compressed_image, targetsize
 

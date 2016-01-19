@@ -35,6 +35,7 @@ if __name__ == '__main__':
         #img = img_as_float(img/255)
         #print(img.shape)
         #print(np.max(img))
+
         cl1 = equalize_adapthist(img/255)
         print('generate '+'clahe_'+os.path.basename(file))
         imsave('clahe_'+os.path.basename(file),cl1)

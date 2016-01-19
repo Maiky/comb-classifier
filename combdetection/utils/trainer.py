@@ -148,6 +148,13 @@ class Trainer():
             plt.show()
 
 
+    def save_validation_set(self, X_test, Y_test, network_filename):
+        fp = conf.TRAINING_LOG_PATH+network_filename+"_validation_set.hd5f"
+        if (os.path.exists(fp)):
+            f = h5py.File(fp, "w")
+            f.create_dataset("X_test", data=X_test)
+            f.create_dataset("Y_test", data=Y_test)
+
 
     def show_prediciton_performance(self,y_true, y_pred, y_score):
         acc_score = accuracy_score(y_true, y_pred)
