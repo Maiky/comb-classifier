@@ -47,7 +47,8 @@ def get_saliency_network(train=False):
     model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
     model.add(Dropout(0.25))
 
-    model.add(Convolution2D(nb_classes,11,11))
+    # (45,45), (22,22) (11,11), (7,7)
+    model.add(Convolution2D(nb_classes,7,7))
     if train:
         model.add(Flatten())
     #model.add(Dense(128))

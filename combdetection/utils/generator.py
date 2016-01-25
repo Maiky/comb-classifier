@@ -14,6 +14,7 @@ from sklearn.cross_validation import train_test_split
 from skimage.exposure import  equalize_adapthist
 from scipy.misc import imread, imresize, imsave
 from scipy import stats
+import random
 
 if not conf.GENERATOR_OUTPUT:
     #needed to plot images on flip
@@ -226,7 +227,7 @@ class Generator(object):
         return masks
 
     def generate_dataset(self, image_path, full_labeled=False, mask_type="",
-                         compression=conf.GENERATOR_COMPRESSION_FAKTOR, use_clahe=False):
+                         compression=conf.GENERATOR_COMPRESSION_FAKTOR, use_clahe=False, max_samples_per_set = None):
         # check if path is directory or file,
         # parse directory if necessary
         if not os.path.isfile(image_path):
@@ -278,14 +279,14 @@ class Generator(object):
                 for mask_type in mask_types:
                     im = masks[mask_type[0]]
                     self._generate_samples_for_mask(grp, os.path.realpath(file), mask_type[1], accept_outside=False,
-                                                    compression=compression, im_mask=im, use_clahe=use_clahe)
+                                                    compression=compression, im_mask=im, use_clahe=use_clahe, max_samples_per_set= max_samples_per_set)
             else:
                 grp.attrs['full_labeled'] = "NO"
                 for mask_type in mask_types:
                     self._generate_samples_for_mask(grp, os.path.realpath(file), mask_type[1], accept_outside=False,
-                                                    compression=compression, use_clahe=use_clahe)
+                                                    compression=compression, use_clahe=use_clahe, max_samples_per_set= max_samples_per_set)
 
-    def _generate_samples_for_mask(self, grp, file, mask_type, im_mask=None, accept_outside=False, compression=None, use_clahe=False):
+    def _generate_samples_for_mask(self, grp, file, mask_type, im_mask=None, accept_outside=False, compression=None, use_clahe=False,  max_samples_per_set = None):
         """
         Return the x intercept of the line M{y=m*x+b}.  The X{x intercept}
         of a line is the point at which it crosses the x axis (M{y=0}).
@@ -325,7 +326,7 @@ class Generator(object):
         print("generate samples for mask-type:" + mask_type + " with sample-size:" +str(sample_size)+"("+ str(orig_size) + ")")
         # max-shift:" + str(max_shift) + "and compression:" + str(compression) + ".")
         #sprint("new size of samples:" + str(sample_size) + " and as vector:" + str(vector_size))
-        grp.attrs['compression_factor'] = compression
+        #grp.attrs['compression_factor'] = compression
         grp.attrs['orig_sample_size'] = orig_size
         grp.attrs['compr_sample_size'] = sample_size
 
@@ -385,10 +386,12 @@ class Generator(object):
 
         if output:
             fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, sharey=True,)
+            fig3, ax3 = plt.subplots(nrows=1, ncols=1, sharex=True, sharey=True,)
             fig2, ax2 = plt.subplots(nrows=6, ncols=6, sharex=True, sharey=True, )
             ax2 = ax2.flatten()
             #ax[0].imshow(im_mask, interpolation='nearest', cmap=plt.cm.gray)
             ax.imshow(orig, interpolation='nearest', cmap=plt.cm.gray)
+            ax3.imshow(im_mask, interpolation='nearest', cmap=plt.cm.gray)
 
         possible_indices = np.transpose(np.nonzero(im_mask))
         all_sample_count = 0
@@ -398,7 +401,7 @@ class Generator(object):
         big_mask = False
         contour_size = None
         thres = conf.GENERATOR_MIN_OVERLAPPING
-        if not "bee" in mask_type:
+        if not "bee" in mask_type and compression >= 4 :
             big_mask = True
             thres = conf.GENERATOR_MIN_OVERLAPPING_BIG
             print("big mask detected, start shifting..")
@@ -409,7 +412,7 @@ class Generator(object):
             print("in head")
             contour_size = int(np.round(60/compression))
             print("small contours detected, using " +str(contour_size)+" for matching")
-
+        print("use "+str(thres)+' as threshold')
         vals = []
         # iterate over all positions
         for current_position in possible_indices:
@@ -475,6 +478,11 @@ class Generator(object):
             sys.stderr.write('\r %d/%d:, total for mask-type: %d  ' % (i, max_sample_count, all_sample_count))
             sys.stderr.flush()
 
+        if max_samples_per_set is not None:
+            if all_sample_count > max_samples_per_set:
+                samples = random.sample(samples, max_samples_per_set)
+                all_sample_count = max_samples_per_set
+
         print("finished, found " + str(all_sample_count) + " samples to use")
 
         if output:
@@ -495,10 +503,12 @@ class Generator(object):
             plt.tight_layout()
             if(conf.ANALYSE_PLOTS_SAVE):
                 fn,ext1 = os.path.splitext(os.path.basename(file))
-                fnm = conf.ANALYSE_PLOTS_PATH+fn+'_'+mask_type+'_mask.png'
-                fig.savefig(fnm)
+                fnsl = conf.ANALYSE_PLOTS_PATH+fn+'_'+mask_type+'_sliding_window.png'
+                fig.savefig(fnsl)
                 fns = conf.ANALYSE_PLOTS_PATH+fn+'_'+mask_type+'_samples.png'
                 fig2.savefig(fns)
+                fnm = conf.ANALYSE_PLOTS_PATH+fn+'_'+mask_type+'_mask.png'
+                fig3.savefig(fnm)
             if(conf.GENERATOR_OUTPUT):
                 plt.show()
 

@@ -11,3 +11,4 @@ class ImageEntry:
         self.seconds = seconds
         self.microseconds = microseconds
         self.filename = filename
+        self.origsize = None

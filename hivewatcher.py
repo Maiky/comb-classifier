@@ -41,11 +41,11 @@ class HiveWatcher():
 
         for entry, image, orig_image in zip(entries, classified_images, images):
             dt = datetime.datetime(entry.year, entry.month, entry.days, entry.hours, entry.minutes, entry.seconds, entry.microseconds)
-            beedtc.detect_bees_per_image(image,orig_image, dt, camera_id)
+            beedtc.detect_bees_per_image(image,orig_image, dt, camera_id, entry.origsize)
 
-        print("start comb-detection")
-        cc = cocl.CombClassifier()
-        masks, mask_polygons = cc.gen_comb_state_per_day(classified_images, date, camera_id)
+        #print("start comb-detection")
+        #cc = cocl.CombClassifier()
+        #masks, mask_polygons = cc.gen_comb_state_per_day(classified_images, date, camera_id, entries[0].origsize)
 
     def _load_images(self, files):
 
@@ -90,11 +90,12 @@ class HiveWatcher():
             for date, sequences in camera.items():
                 images = []
                 entries = []
-                for i in range(3):
-                    entry = sequences[i]
+                for entry in sequences:
+                    #entry = sequences[i]
                     print("add image")
                     fn =entry.filename
                     image, compressed_image, targetsize = util.compress_image_for_network(fn)
+                    entry.origsize = image.shape
                     images.append(compressed_image)
                     entries.append(entry)
                 self._process_images_for_day(images,entries,  date, k)
@@ -145,7 +146,7 @@ if __name__ == '__main__':
             exit()
         else:
             files = []
-            print('path is directory, scan for *.jpeg')
+            print('path is directory, scan for *.'+args['extension'])
             current_dir = os.getcwd()
             os.chdir(path)
             for file in glob.glob("*."+args['extension']):

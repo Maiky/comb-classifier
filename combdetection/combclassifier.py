@@ -50,20 +50,6 @@ class CombClassifier:
         shifted_mask = np.concatenate((new_column, mask),axis=2)
         self.scene_masks.append(shifted_mask)
 
-        #class_probs = class_probs > 0.2
-
-        #for k,v in conf.NETWORK_COMBS_CLASS_LABEL_MAPPING:
-         #   if "bee" not in v:
-         #       masks = self.scene_masks.get(k)
-          #      masks.append(class_probs[k])
-          #      self.scene_masks[k] = masks
-
-        #for i in range(class_probs.shape[0]):
-            #print(i)
-
-            #fig, ax = plt.subplots(nrows=1, ncols=1)
-            #ax.imshow(class_probs[i], interpolation='nearest')
-            #plt.show()
 
 
     def _getAverageMask(self):
@@ -74,6 +60,7 @@ class CombClassifier:
             print(v.shape)
             res = res+(count*v)
         return res
+
 
     def getMasksForClasses(self, resultmask):
 
@@ -86,11 +73,12 @@ class CombClassifier:
         return masks
 
 
-    def gen_comb_state_per_day(self, classified_images, date, camera_id, storeInDb = True):
+    def gen_comb_state_per_day(self, classified_images, date, camera_id, targetsize, storeInDb = True):
         masks = self._getClasses(classified_images)
         mask_polygons ={}
         for k, mask in masks.items():
-            polygons = self._get_polygons_for_mask(mask)
+            scaled_mask = cv2.resize( mask, (targetsize[1], targetsize[0]))
+            polygons = self._get_polygons_for_mask(scaled_mask)
             if storeInDb:
                 self._store_polygons_in_db(polygons, k, camera_id, date)
             mask_polygons[k] = polygons
@@ -99,16 +87,48 @@ class CombClassifier:
 
     def _getClasses(self, images):
         print('I#m in getClasses')
+
+
         for image in images:
             print("start processing image..")
             self._extract_comb_classes(image)
 
+        #fig, ax = plt.subplots(nrows=2, ncols=3, sharey=True, sharex=True)
+        #ax = ax.flatten()
+
+        #for i, mask in zip(range(len(self.scene_masks)),self.scene_masks):
+        #    ax[i].imshow(mask, interpolation='nearest')
+        #    #ax[i].set_title('Einzelbild')
+        #ax[0].set_xticks([])
+        #ax[0].set_yticks([])
+        #plt.show()
+        #exit()
+
         av_mask = self._getAverageMask()
+        im_av_mask = av_mask
+        im_av_mask[:,:,2] = 0
+        plt.imshow(im_av_mask)
+        plt.show()
+        exit()
+        #ax[len(self.scene_masks)].set_title('Mittelwert')
 
         masks = self.getMasksForClasses(av_mask)
+        #for mask in masks.values():
+
+        im_mask = np.zeros((3,masks[1].shape[0], masks[1].shape[1]))
+        im_mask[1,:] = masks[1]
+        #im_mask[2,:] = masks[2]
+        im_mask = np.transpose(im_mask, axes=(1,2,0))
+        plt.imshow(im_mask)
+        plt.show()
+        exit()
+
 
         for k, mask in masks.items():
             masks[k] = self._postprocessMask(mask)
+
+
+
         return masks
 
     def _get_polygons_for_mask(self, mask):

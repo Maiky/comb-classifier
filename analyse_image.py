@@ -13,6 +13,7 @@ from scipy.misc import imread, imresize, imsave
 import cv2
 from combdetection.segmentation import get_superpixel_segmentation
 from skimage.segmentation import mark_boundaries
+import os.path
 
 def get_saliency_image(Ysamples, targetsize):
     stride = 2
@@ -170,13 +171,10 @@ if __name__ == '__main__':
     ax[0].set_title('original image')
     #ax[0].setTitle("original")
     ax[1].imshow(im)
-    imsave( conf.ANALYSE_PLOTS_PATH+network_name+"_masks.png", im)
     ax[1].set_title('network output')
     ax[2].imshow(comb_im)
-    imsave( conf.ANALYSE_PLOTS_PATH+network_name+"_combs.png", comb_im)
     ax[2].set_title('combs')
     ax[3].imshow(bee_im)
-    imsave( conf.ANALYSE_PLOTS_PATH+network_name+"_bees.png", bee_im)
     ax[3].set_title('bees')
     #ax[2] = fig[2].add_subplot(1, 1, 1)
     #ax[2].imshow(mark_boundaries(compressed_image, segments))
@@ -187,8 +185,15 @@ if __name__ == '__main__':
     ax[0].set_yticks([])
     plt.tight_layout()
     if(conf.ANALYSE_PLOTS_SAVE):
-        fn = conf.ANALYSE_PLOTS_PATH+network_name+"_labeled_image.png"
+        image_base, extention = os.path.splitext(os.path.basename(image_file))
+        fn = conf.ANALYSE_PLOTS_PATH+network_name+"_"+image_base+"_labeled_image.png"
+        fnn = conf.ANALYSE_PLOTS_PATH+network_name+"_"+image_base+"network_output.png"
+        fnc = conf.ANALYSE_PLOTS_PATH+network_name+"_"+image_base+"cells.png"
+        fnb = conf.ANALYSE_PLOTS_PATH+network_name+"_"+image_base+"bees.png"
         plt.savefig(fn)
+        imsave(fnn, im)
+        imsave(fnc, comb_im)
+        imsave(fnb,bee_im)
     if(conf.ANALYSE_PLOTS_SHOW):
         plt.axis('off')
         plt.show()

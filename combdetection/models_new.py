@@ -9,7 +9,6 @@ import combdetection.config as conf
 def get_comb_net(train=False):
 
     nb_classes = len(conf.CLASS_LABEL_MAPPING)
-
     # input image dimensions
     img_rows, img_cols = conf.NETWORK_SAMPLE_SIZE[0], conf.NETWORK_SAMPLE_SIZE[1]
     # number of convolutional filters to use

@@ -137,7 +137,6 @@ class Trainer():
         if(conf.ANALYSE_PLOTS_SHOW):
             plt.show()
 
-
         epochs = np.array([log[0] for log in log.epoch_hist])
         plt.plot(range(len(epochs)), epochs, color="red")
         plt.ylabel("val_loss")
